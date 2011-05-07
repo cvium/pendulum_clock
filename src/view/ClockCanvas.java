@@ -10,9 +10,9 @@ public class ClockCanvas extends Canvas {
 		super();
 	}
 
-	protected void showNotify() {
-		setFullScreenMode(true);
-	}
+	//protected void showNotify() {
+	//	setFullScreenMode(true);
+	//}
 
 	protected void paint(Graphics g) {
 		//Clear the screen
