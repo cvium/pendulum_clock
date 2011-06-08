@@ -13,4 +13,9 @@ public class Environment {
 		int seconds = (int)((System.currentTimeMillis() + 500)/1000 + 3600 * TIME_OFFSET) % SECONDS_PER_DAY;
 		return new Time(seconds);
 	}
+	
+	public static int getSystemTimeInMilliSeconds() {
+		int milliSeconds = (int)((System.currentTimeMillis() + 3600000 * TIME_OFFSET) % (1000*SECONDS_PER_DAY));
+		return milliSeconds;
+	}
 }

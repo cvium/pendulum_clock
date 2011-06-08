@@ -7,7 +7,7 @@ public class Pendulum {
 	private int timeGained; //Delay compared to system clock in seconds per day.
 	private final static int DEFAULT_LENGTH = 25;
 	private final static int MIN_LENGTH = 1;
-	private final static int MAX_LENGTH = 100;
+	private final static int MAX_LENGTH = 50;
 	private final static double TWOTHOUSAND_PI = 6283.0;
 	
 	/**
@@ -16,7 +16,7 @@ public class Pendulum {
 	public Pendulum() {
 		this.length = DEFAULT_LENGTH;
 		period = (int)(TWOTHOUSAND_PI * Math.sqrt(length / Environment.GRAVITATIONAL_ACC));
-		timeGained = ((period-1000) * 86400 + 500) / 1000;
+		timeGained = 86400 * 1000 / period - 86400;
 	}
 	
 	/**
@@ -46,16 +46,14 @@ public class Pendulum {
 	 */
 	public void setLength(double length) {
 		if(length <= MIN_LENGTH) {
-			if(length >= MAX_LENGTH) {
-				this.length = MAX_LENGTH;
-			} else {
-				this.length = MIN_LENGTH;
-			}
+			this.length = MIN_LENGTH;
+		} else if(length >= MAX_LENGTH) {
+			this.length = MAX_LENGTH;
 		} else {
 			this.length = length;
 		}
 		period = (int)(TWOTHOUSAND_PI * Math.sqrt(length / Environment.GRAVITATIONAL_ACC));
-		timeGained = ((period-1000) * 86400 + 500) / 1000;
+		timeGained = 86400 * 1000 / period - 86400;
 	}
 	
 	public void reset() {

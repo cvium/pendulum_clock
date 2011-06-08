@@ -20,6 +20,7 @@ public class Time {
 	 * @param s The number of seconds after midnight
 	 */
 	public Time(int s) {
+		s = s % 86400;
 		hours = s / 3600;
 		s = s % 3600;
 		minutes = s / 60;
@@ -28,23 +29,21 @@ public class Time {
 	}
 	
 	/**
-	 * Adds a second to the time
+	 * Adds a given amount of seconds to the time
+	 * @param s Number of seconds to add
 	 */
-	public void increment() {
-		if(seconds == 59) {
-			if(minutes == 59) {
-				if(hours == 23){
-					hours = 0;
-				} else {
-					hours++;
+	public void increment(int s) {
+		seconds += s;
+		if(seconds >= 60) {
+			minutes += seconds / 60;
+			seconds = seconds % 60;
+			if(minutes >= 60) {
+				hours += minutes / 60;
+				minutes = minutes % 60;
+				if(hours >= 24){
+					hours = hours % 24;
 				}
-				minutes = 0;
-			} else {
-				minutes++;
 			}
-			seconds = 0;
-		} else {
-			seconds++;
 		}
 	}
 	

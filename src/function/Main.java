@@ -20,8 +20,10 @@ public class Main extends MIDlet implements CommandListener {
 
 	private final static Command APPLY_COMMAND = new Command("Apply", Command.OK, 1);
 	private final static Command EXIT_COMMAND = new Command("Exit", Command.EXIT, 2);
+	private final static Command BACK_COMMAND = new Command("Back", Command.EXIT, 2);
 	private final static Command YES_COMMAND = new Command("Yes", Command.OK, 1);
 	private final static Command NO_COMMAND = new Command("No", Command.CANCEL, 2);
+	private final static Command STOP_COMMAND = new Command("Stop", Command.OK, 1);
 	private final static Command START_COMMAND = new Command("Start", Command.OK, 1);
 	private final static Command SETTINGS_COMMAND = new Command("Settings", Command.ITEM, 3);
 	
@@ -31,11 +33,9 @@ public class Main extends MIDlet implements CommandListener {
 	private List startList;
 	private List settingsList;
 	private Form setLengthForm;
-	private Form setDelayForm;
 	private Alert resetClockAlert;
 	private Alert resetAllAlert;
 	private Gauge lengthGauge;
-	private Gauge delayGauge;
 	
 	private Clock clock;
 	
@@ -47,7 +47,7 @@ public class Main extends MIDlet implements CommandListener {
 		
 		canvas = new ClockCanvas(clock);
 		canvas.addCommand(EXIT_COMMAND);
-		canvas.addCommand(START_COMMAND);
+		canvas.addCommand(STOP_COMMAND);
 		canvas.addCommand(SETTINGS_COMMAND);
 		canvas.setCommandListener(this);
 		
@@ -58,13 +58,13 @@ public class Main extends MIDlet implements CommandListener {
 		
 		String[] settingsStrings = {"Set length", "Reset Clock", "Reset All"};
 		settingsList = new List("Settings", Choice.IMPLICIT, settingsStrings, null);
-		settingsList.addCommand(EXIT_COMMAND);
+		settingsList.addCommand(BACK_COMMAND);
 		settingsList.setCommandListener(this);
 		
 		setLengthForm = new Form(null);
 		lengthGauge = new Gauge("Length in cm", true, 50, 25);
 		setLengthForm.append(lengthGauge);
-		setLengthForm.addCommand(EXIT_COMMAND);
+		setLengthForm.addCommand(BACK_COMMAND);
 		setLengthForm.addCommand(APPLY_COMMAND);
 		setLengthForm.setCommandListener(this);
 		
@@ -108,17 +108,13 @@ public class Main extends MIDlet implements CommandListener {
 					display.setCurrent(setLengthForm);
 					break;
 				case 1:
-					delayGauge.setValue(clock.getTimeGained());
-					display.setCurrent(setDelayForm);
-					break;
-				case 2:
 					display.setCurrent(resetClockAlert);
 					break;
-				case 3:
+				case 2:
 					display.setCurrent(resetAllAlert);
 					break;
 				}
-			} else if(command == EXIT_COMMAND) {
+			} else if(command == BACK_COMMAND) {
 				display.setCurrent(canvas);
 			}
 		//Set length form actions
@@ -126,16 +122,14 @@ public class Main extends MIDlet implements CommandListener {
 			if(command == APPLY_COMMAND) {
 				clock.getPendulum().setLength(lengthGauge.getValue());
 				clock.resetTime();
-				updater.clockSettingsUpdated();
 				display.setCurrent(canvas);
-			} else if(command == EXIT_COMMAND) {
+			} else if(command == BACK_COMMAND) {
 				display.setCurrent(settingsList);
 			}
 		//Reset clock alert actions
 		} else if(displayable == resetClockAlert) {
 			if(command == YES_COMMAND) {
 				clock.resetTime();
-				updater.clockSettingsUpdated();
 				display.setCurrent(canvas);
 			} else if(command == NO_COMMAND) {
 				display.setCurrent(settingsList);
@@ -144,7 +138,6 @@ public class Main extends MIDlet implements CommandListener {
 		} else if(displayable == resetAllAlert) {
 			if(command == YES_COMMAND) {
 				clock.reset();
-				updater.clockSettingsUpdated();
 				display.setCurrent(canvas);
 			} else if(command == NO_COMMAND) {
 				display.setCurrent(settingsList);
@@ -153,10 +146,16 @@ public class Main extends MIDlet implements CommandListener {
 		} else if(displayable == canvas) {
 			if(command == SETTINGS_COMMAND) {
 				display.setCurrent(settingsList);
-			} else if(command == START_COMMAND) {
-				//TODO: MAYBE??
 			} else if(command == EXIT_COMMAND) {
 				updater.stopThread();
+			} else if(command == STOP_COMMAND) {
+				canvas.stopClock();
+				canvas.removeCommand(STOP_COMMAND);
+				canvas.addCommand(START_COMMAND);
+			} else if(command == START_COMMAND) {
+				canvas.startClock();
+				canvas.removeCommand(START_COMMAND);
+				canvas.addCommand(STOP_COMMAND);
 			}
 		}
 	}

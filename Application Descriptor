@@ -1,6 +1,7 @@
-MIDlet-Jar-URL: Pendulum.jar
-MIDlet-Name: Pendulum MIDlet Suite
-MIDlet-Vendor: MIDlet Suite Vendor
 MIDlet-Version: 1.0.0
-MicroEdition-Configuration: CLDC-1.0
+MIDlet-Vendor: MIDlet Suite Vendor
+MIDlet-Jar-URL: Pendulum.jar
+MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.1
+MIDlet-1: Pendulum,,function.Main
+MIDlet-Name: Pendulum MIDlet Suite

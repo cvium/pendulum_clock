@@ -11,7 +11,7 @@ public class Clock {
 	public Clock() {
 		time = Environment.getSystemTime();
 		pendulum = new Pendulum();
-		timeStamp = Environment.getSystemTime().toSeconds();
+		timeStamp = Environment.getSystemTimeInMilliSeconds();
 	}
 	
 	/**
@@ -43,11 +43,18 @@ public class Clock {
 	}
 	
 	/**
-	 * Sets the clock time to a given number of seconds after midnight
-	 * @param seconds The number of seconds after midnight
+	 * Updates the time of the clock.
 	 */
 	public void updateTime() {
-		
+		int milliSecondsPassed = Environment.getSystemTimeInMilliSeconds() - timeStamp;
+		if(milliSecondsPassed < 0) {
+			milliSecondsPassed += 86400000;
+		}
+		int secondsPassed = milliSecondsPassed / pendulum.getPeriod();
+		if(secondsPassed >= 1) {
+			time.increment(secondsPassed);
+			timeStamp = Environment.getSystemTimeInMilliSeconds() - milliSecondsPassed % pendulum.getPeriod();
+		}
 	}
 	
 	/**
