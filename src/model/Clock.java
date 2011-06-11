@@ -46,15 +46,13 @@ public class Clock {
 	 * Updates the time of the clock.
 	 */
 	public void updateTime() {
-		int milliSecondsPassed = Environment.getSystemTimeInMilliSeconds() - timeStamp;
+		long milliSecondsPassed = Environment.getSystemTimeInMilliSeconds() - timeStamp;
 		if(milliSecondsPassed < 0) {
 			milliSecondsPassed += 86400000;
 		}
-		int secondsPassed = milliSecondsPassed / pendulum.getPeriod();
-		if(secondsPassed >= 1) {
-			time.increment(secondsPassed);
-			timeStamp = Environment.getSystemTimeInMilliSeconds() - milliSecondsPassed % pendulum.getPeriod();
-		}
+		int millisecondsToAdd = (int)(1000 * milliSecondsPassed / pendulum.getPeriod());
+		time.increment(millisecondsToAdd);
+		timeStamp = Environment.getSystemTimeInMilliSeconds();
 	}
 	
 	/**

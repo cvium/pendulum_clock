@@ -12,15 +12,17 @@ import model.Environment;
 public class ClockCanvas extends Canvas {
 	
 	private Clock clock;
-	private int length, seconds;
-	private boolean pendulumPressed, clockHandsRunning;
+	private int length, seconds, pendulumX, pendulumY;
+	private boolean pendulumPressed, clockRunning;
 	private Image pendulum, clockface, background;
+	private double angle; //Angle between pendulum chord and vertical axis in radians.
 	
 	//Lengths of the clock hands in pixels
 	private final static double HOUR_HAND_LENGTH = 15.0;
 	private final static double MINUTE_HAND_LENGTH = 20.0;
 	private final static double SECONDS_HAND_LENGTH = 25.0;
 	private final static double PI = 3.14;
+	private final static double MAX_ANGLE = PI/15.0;
 	
 	/**
 	 * Creates a new ClockCanvas
@@ -28,11 +30,13 @@ public class ClockCanvas extends Canvas {
 	public ClockCanvas(Clock clock) {
 		super();
 		this.clock = clock;
-		this.length = 25;
-		this.seconds = 0;
+		length = 25;
+		seconds = 0;
 		pendulumPressed = false;
-		clockHandsRunning = true;
-		
+		clockRunning = true;
+		angle = 0;
+		pendulumX = 69;
+		pendulumY = 68 + 3 * length;
 		
 		try {
 			clockface = Image.createImage("/view/clockface.png");
@@ -51,7 +55,11 @@ public class ClockCanvas extends Canvas {
 	protected void paint(Graphics g) {
 		if(!pendulumPressed) {
 			length = (int)clock.getPendulum().getLength();
+			pendulumY = 68 + 3 * length;
 		}
+		
+		
+		
 		//Draws the background
 		g.setColor(0, 0, 0);
 		g.drawImage(background, 0, 0, Graphics.TOP|Graphics.LEFT);
@@ -61,23 +69,31 @@ public class ClockCanvas extends Canvas {
 		
 		
 		//Draw the hour hand of the clock
-		if(clockHandsRunning) {
+		if(clockRunning) {
+			//Only updates the position of the hands when the clock should be running
 			seconds = clock.getTime().toSeconds();
 		}
 		int x, y;
 		x = (int)(HOUR_HAND_LENGTH * Math.cos(-PI/2.0 + 2*PI * seconds / 43200.0));
 		y = (int)(HOUR_HAND_LENGTH * Math.sin(-PI/2.0 + 2*PI * seconds / 43200.0));
-		drawThickLine(70, 40, 70 + x, 40 + y, 3, g);
+		drawThickLine(70, 40, 70 + x, 40 + y, 2, g);
+		
+		//Draw the minute hand of the clock
+		x = (int)(MINUTE_HAND_LENGTH * Math.cos(-PI/2.0 + (seconds % 3600) / 60 * 2*PI / 60.0));
+		y = (int)(MINUTE_HAND_LENGTH * Math.sin(-PI/2.0 + (seconds % 3600) / 60 * 2*PI / 60.0));
+		g.drawLine(70, 40, 70 + x, 40 + y);
 		
 		//Draw the seconds hand of the clock
 		x = (int)(SECONDS_HAND_LENGTH * Math.cos(-PI/2.0 + (seconds % 60) * 2*PI / 60.0));
 		y = (int)(SECONDS_HAND_LENGTH * Math.sin(-PI/2.0 + (seconds % 60) * 2*PI / 60.0));
+		g.setColor(255, 0, 0);
 		g.drawLine(70, 40, 70 + x, 40 + y);
+		g.setColor(0, 0, 0);
 		
 		//Draw the pendulum.
-		drawThickLine(69, 68, 70, 70 + 3* length, 2, g); //Make two last args variable for animation/changing length
-		g.drawImage(pendulum, 70, 70 + 3*length, Graphics.HCENTER|Graphics.TOP);
-		
+		//drawThickLine(69, 68, 70, 70 + 3* length, 2, g);
+		//g.drawImage(pendulum, 70, 70 + 3*length, Graphics.HCENTER|Graphics.TOP);
+		drawPendulum(g);
 		//Draw the info boxes
 		g.drawString("System time", 135, 25, Graphics.BOTTOM|Graphics.LEFT);
 		//g.drawRect(135, 25, 90, 30);
@@ -95,11 +111,13 @@ public class ClockCanvas extends Canvas {
 	}
 	
 	public void stopClock() {
-		clockHandsRunning = false;
+		clockRunning = false;
+		pendulumX = 69;
+		pendulumY = 68 + 3 * length;
 	}
 	
 	public void startClock() {
-		clockHandsRunning = true;
+		clockRunning = true;
 	}
 	/**
 	 * Draws a line with the specified number of pixels in thickness.
@@ -159,6 +177,21 @@ public class ClockCanvas extends Canvas {
 		}
 	}
 	
+	private void drawPendulum(Graphics graphic) {
+		if(clockRunning) {
+			if(!pendulumPressed) {
+				angle = MAX_ANGLE * Math.cos( 2 * PI * Environment.getSystemTimeInMilliSeconds() / clock.getPeriod());
+				pendulumX = 69 + (int)(3 * length * Math.sin(angle));
+				pendulumY = 68 + (int)(3 * length * Math.cos(angle));
+			}
+			drawThickLine(69, 68, pendulumX, pendulumY, 2, graphic);
+			graphic.drawImage(pendulum, pendulumX, pendulumY, Graphics.HCENTER|Graphics.TOP);
+		} else {
+			drawThickLine(69, 68, 69, 68 + 3* length, 2, graphic);
+			graphic.drawImage(pendulum, pendulumX, pendulumY, Graphics.HCENTER|Graphics.TOP);
+		}
+	}
+	
 	private void handleKeyEvent(int ga) {		
 		repaint();
 	}
@@ -178,14 +211,25 @@ public class ClockCanvas extends Canvas {
 	// Handle touch events for devices with a touch screen
 	protected void pointerPressed(int x, int y) {
 		super.pointerPressed(x, y);
-		if(x > 60 && x < 100 && y > 60 + 3*length && y < 80 + 3*length + 50) {
+		if(x > pendulumX - 20 && x < pendulumX + 20 && y > pendulumY - 10 && y < pendulumY + 30) {
 			pendulumPressed = true;
 		}	
 	}
 	
 	protected void pointerDragged(int x, int y) {
 		if(pendulumPressed) {
-			length = (y - 70) / 3;
+			if(x < 120) {
+				pendulumX = x;
+			} else
+				pendulumX = 120;
+			if(y > 70) {
+				pendulumY = y;
+			} else {
+				pendulumY = 70;
+			}
+			int dx = pendulumX - 70;
+			int dy = pendulumY - 70;
+			length = (int)(Math.sqrt(dx*dx + dy*dy));
 			if(length>50) {
 				length = 50;
 			} else if(length < 1) {
